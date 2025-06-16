@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bilz X AI</title>
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background-color: #0d0d0d;
+      color: white;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #111;
+      padding: 20px;
+      border-right: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar h2 {
+      color: #00ffff;
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    .menu {
+      list-style: none;
+    }
+
+    .menu-item {
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      background-color: #1a1a1a;
+      transition: background 0.3s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .menu-item:hover {
+      background-color: #222;
+    }
+
+    .dots {
+      color: #888;
+      cursor: pointer;
+    }
+
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #0d0d0d;
+    }
+
+    .chat-box {
+      padding: 20px;
+      overflow-y: auto;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 70%;
+      margin: 10px 0;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background-color: #1a1a1a;
+      box-shadow: 0 4px 8px rgba(0,255,255,0.05);
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background-color: #004d4d;
+    }
+
+    .message.bot {
+      align-self: flex-start;
+      background-color: #1a1a1a;
+    }
+
+    .chat-input {
+      display: flex;
+      padding: 15px;
+      border-top: 1px solid #222;
+      background-color: #111;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      background-color: #222;
+      color: white;
+    }
+
+    .chat-input button {
+      margin-left: 10px;
+      padding: 12px 20px;
+      border: none;
+      background-color: #00ffff;
+      color: black;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .chat-input button:hover {
+      background-color: #00dddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div>
+        <h2>Bilz X AI</h2>
+        <ul class="menu">
+          <li class="menu-item" onclick="scrollToSection('new-chat')">🧠 New Chat <span class="dots">⋮</span></li>
+          <li class="menu-item" onclick="scrollToSection('upload')">📁 Upload File <span class="dots">⋮</span></li>
+          <li class="menu-item" onclick="scrollToSection('settings')">⚙️ Settings <span class="dots">⋮</span></li>
+          <li class="menu-item" onclick="scrollToSection('logout')">📕 Logout <span class="dots">⋮</span></li>
+        </ul>
+      </div>
+      <p style="font-size: 12px; color: #555;">© 2025 Bilz X AI</p>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+      <div class="chat-box" id="chatBox">
+        <div class="message bot" data-aos="fade-up">Hi, how can I assist you today?</div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your message..." onkeydown="handleKey(event)">
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init();
+
+    function sendMessage() {
+      const input = document.getElementById('userInput');
+      const text = input.value.trim();
+      if (text === '') return;
+
+      const chatBox = document.getElementById('chatBox');
+
+      const userMessage = document.createElement('div');
+      userMessage.className = 'message user';
+      userMessage.textContent = text;
+      chatBox.appendChild(userMessage);
+
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // Kirim ke server Node.js
+      fetch('/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: text })
+      })
+        .then(res => res.json())
+        .then(data => {
+          const botMessage = document.createElement('div');
+          botMessage.className = 'message bot';
+          botMessage.textContent = data.reply;
+          chatBox.appendChild(botMessage);
+          chatBox.scrollTop = chatBox.scrollHeight;
+          AOS.refresh();
+        })
+        .catch(err => {
+          const botMessage = document.createElement('div');
+          botMessage.className = 'message bot';
+          botMessage.textContent = '⚠️ Error: Gagal mendapatkan respons.';
+          chatBox.appendChild(botMessage);
+        });
+    }
+
+    function handleKey(event) {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function scrollToSection(id) {
+      const msg = document.createElement('div');
+      msg.className = 'message bot';
+      msg.textContent = 'You clicked: ' + id;
+      document.getElementById('chatBox').appendChild(msg);
+    }
+  </script>
+</body>
+</html>
